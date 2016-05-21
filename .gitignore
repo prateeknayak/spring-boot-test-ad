@@ -1,0 +1,7 @@
+## Folder
+.idea/
+target/
+
+# OS and IDE Files
+*.iml
+*.DS_Store
