@@ -26,9 +26,9 @@ public class BookService {
 
     public void addBookToMap(Book b) throws Exception {
         if (null != booksMap.get(b.getId())) {
-            booksMap.put(b.getId(), b);
+            throw new Exception("Book with ID: " + b.getId() + " already exists in the records");
         }
-        throw new Exception("Book with ID: " + b.getId() + " already exists in the records");
+        booksMap.put(b.getId(), b);
     }
 
     public Book getBookFromMap(int id) {
