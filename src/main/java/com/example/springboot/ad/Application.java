@@ -6,11 +6,11 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class HelloJpaApplication {//} implements CommandLineRunner {
-    private static final Logger logger = LoggerFactory.getLogger(HelloJpaApplication.class);
+public class Application {//} implements CommandLineRunner {
+    private static final Logger logger = LoggerFactory.getLogger(Application.class);
 
     public static void main(String[] args) {
-        SpringApplication.run(HelloJpaApplication.class, args);
+        SpringApplication.run(Application.class, args);
 
     }
 }
