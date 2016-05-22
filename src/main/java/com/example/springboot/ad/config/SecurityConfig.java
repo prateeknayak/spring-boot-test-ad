@@ -1,19 +1,22 @@
 package com.example.springboot.ad.config;
 
-import org.springframework.beans.factory.annotation.Value;
+import com.example.springboot.ad.service.AuthTokenService;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.session.SessionRegistryImpl;
 
+@Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
-
-    @Value("${backend.admin.role}")
-    private String backendAdminRole;
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
@@ -26,12 +29,28 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .permitAll();
     }
 
-
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.ldapAuthentication()
-                .userSearchFilter("uid={0}")
-                .contextSource()
-                .url("ldap://192.168.11.11:1234/dc=intern,dc=xyz,dc=com");
+        auth
+                .ldapAuthentication()
+                .userDnPatterns("uid={0},ou=people")
+                .groupSearchBase("ou=groups")
+                .contextSource().ldif("classpath:users.ldif");
     }
+
+    @Bean
+    public AuthenticationManager authenticationManagerBean() throws Exception {
+        return super.authenticationManagerBean();
+    }
+
+    @Bean
+    public AuthTokenService tokenService() {
+        return new AuthTokenService();
+    }
+
+    @Bean
+    public SessionRegistry sessionRegistry() {
+        return new SessionRegistryImpl();
+    }
+
 }

@@ -1,4 +1,4 @@
-package com.example.springboot.ad.model;
+package com.example.springboot.ad.model.entity;
 
 import lombok.*;
 

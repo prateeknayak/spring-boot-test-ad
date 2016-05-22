@@ -48,6 +48,20 @@
 			<artifactId>lombok</artifactId>
 			<version>1.16.8</version>
 		</dependency>
+		<!-- -->
+		<dependency>
+			<groupId>org.apache.directory.server</groupId>
+			<artifactId>apacheds-server-jndi</artifactId>
+			<version>1.5.5</version>
+		</dependency>
+
+
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt</artifactId>
+			<version>0.6.0</version>
+		</dependency>
+
 	</dependencies>
 	
 	<build>

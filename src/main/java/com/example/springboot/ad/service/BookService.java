@@ -1,7 +1,7 @@
 package com.example.springboot.ad.service;
 
-import com.example.springboot.ad.model.Book;
-import com.example.springboot.ad.model.BookDetail;
+import com.example.springboot.ad.model.entity.Book;
+import com.example.springboot.ad.model.entity.BookDetail;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +36,9 @@ public class BookService {
     }
 
     public Map<Integer, Book> getBooksMap() {
+        if (0 == booksMap.size()) {
+            generateSomeData();
+        }
         return booksMap;
     }
 }

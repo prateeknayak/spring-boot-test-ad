@@ -1,4 +1,4 @@
-# Boot Application to test AD Authentication
+# Sample Boot Application to test AD Authentication
 
 Dependencies:
 

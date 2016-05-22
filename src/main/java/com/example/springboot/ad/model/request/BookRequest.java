@@ -1,4 +1,4 @@
-package com.example.springboot.ad.model;
+package com.example.springboot.ad.model.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
