@@ -1,8 +1,6 @@
 package com.example.springboot.ad.controller;
 
-import com.example.springboot.ad.exceptions.ClientNotAuthenticatedException;
-import com.example.springboot.ad.exceptions.InvalidTokenException;
-import com.example.springboot.ad.exceptions.TokenAlreadyExistsException;
+import com.example.springboot.ad.exceptions.*;
 import com.example.springboot.ad.model.entity.Book;
 import com.example.springboot.ad.model.request.UIAuthenticationRequest;
 import com.example.springboot.ad.model.security.AuthToken;
@@ -52,6 +50,42 @@ public class LoginController {
        return bookService.getBooksMap();
     }
 
+//    @PreAuthorize("@ADAuthService.verifyAuthentication(#token)")
+    @RequestMapping(
+            value = "/bookAuth",
+            method = RequestMethod.GET,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public Map<Integer, Book> getAuthentication(@RequestHeader("X-AUTH") String token) throws ClientNotAuthenticatedException, FailedAuthorizationException, FailedAuthenticationException {
+        authenticationService.verifyAuthentication(token, "ROLE_MANAGERS");
+        return bookService.getBooksMap();
+    }
+
+    @RequestMapping(
+            value = "/invalidateToken",
+            method = RequestMethod.GET,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public Map<String, String> invalidateToken(@RequestHeader("X-AUTH") String token, Authentication authentication) throws InvalidTokenException, ClientNotAuthenticatedException, FailedAuthorizationException, FailedAuthenticationException {
+        authenticationService.verifyAuthentication(token, "ROLE_DEVELOPERS");
+        authenticationService.logoutUser(token);
+        return defaultMapToReturn;
+    }
+
+
+    @ExceptionHandler(
+            value = {
+                    ClientNotAuthenticatedException.class,
+                    ServletRequestBindingException.class,
+                    IllegalArgumentException.class,
+                    FailedAuthenticationException.class,
+                    FailedAuthorizationException.class})
+    public Map<String, String> authenticationFailure(Exception ex) {
+        log.error("{} , {} ", ex.getMessage(), ex.getCause());
+        defaultMapToReturn.put("DefaultString", "Client not authenticated please login");
+        return defaultMapToReturn;
+    }
+
+
+
 //    @RequestMapping(
 //            value = "/gen",
 //            method = RequestMethod.GET)
@@ -69,34 +103,4 @@ public class LoginController {
 //        log.info("Trying to debug principal");
 //        return defaultMapToReturn;
 //    }
-
-
-
-//    @PreAuthorize("@ADAuthService.verifyAuthentication(#token)")
-    @RequestMapping(
-            value = "/bookAuth",
-            method = RequestMethod.GET,
-            produces = MediaType.APPLICATION_JSON_VALUE)
-    public Map<Integer, Book> getAuthentication(@RequestHeader("X-AUTH") String token) throws ClientNotAuthenticatedException {
-        authenticationService.verifyAuthentication(token);
-        return bookService.getBooksMap();
-    }
-
-    @RequestMapping(
-            value = "/invalidateToken",
-            method = RequestMethod.GET,
-            produces = MediaType.APPLICATION_JSON_VALUE)
-    public Map<String, String> invalidateToken(@RequestHeader("X-AUTH") String token, Authentication authentication) throws InvalidTokenException, ClientNotAuthenticatedException {
-        authenticationService.verifyAuthentication(token);
-        authenticationService.logoutUser(token);
-        return defaultMapToReturn;
-    }
-
-
-    @ExceptionHandler(value =   {ClientNotAuthenticatedException.class, ServletRequestBindingException.class, IllegalArgumentException.class})
-    public Map<String, String> authenticationFailure(Exception ex) {
-        log.error("{} , {} ", ex.getMessage(), ex.getCause());
-        defaultMapToReturn.put("DefaultString", "Client not authenticated please login");
-        return defaultMapToReturn;
-    }
 }

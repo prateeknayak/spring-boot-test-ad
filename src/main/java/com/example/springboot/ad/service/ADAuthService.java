@@ -1,8 +1,6 @@
 package com.example.springboot.ad.service;
 
-import com.example.springboot.ad.exceptions.ClientNotAuthenticatedException;
-import com.example.springboot.ad.exceptions.InvalidTokenException;
-import com.example.springboot.ad.exceptions.TokenAlreadyExistsException;
+import com.example.springboot.ad.exceptions.*;
 import com.example.springboot.ad.model.request.UIAuthenticationRequest;
 import com.example.springboot.ad.model.security.ADUserDetails;
 import com.example.springboot.ad.model.security.AuthToken;
@@ -12,6 +10,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.session.SessionRegistry;
@@ -51,11 +50,13 @@ public class ADAuthService {
      * This is where all the magic happens. Authentication request is intercepted by the controller
      * and is sent here for authentication. We invoke authenticationManger to authenticate our user
      * against AD. Once the user is successfully authenticated we set the authentication in the
-     * security context so that filters / security can do there thing.
+     * security context so that filters / security can do there thing. Although there is not much to gain
+     * by setting authentication since it is STATELESS auth.
      * <p/>
      * Once authentication is set in the context we generate a AuthToken object with user details taken
      * from the principal. This new generated AuthToken is stored in a tokenStore which ideally could be
-     * a caceh or DB.
+     * a cache or DB.
+     *
      *
      * @param request Authentication Request received by the API.
      * @return authToken newly generated token to be sent API consumer.
@@ -66,11 +67,11 @@ public class ADAuthService {
         final Authentication authentication = authenticationManager.authenticate(
                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
         );
+
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         context.setAuthentication(authentication);
         SecurityContextHolder.setContext(context);
-//        SecurityContextHolder.getContext()
-//        SecurityContextHolder.getContext().setAuthentication(authentication);
+
         UserDetails userDetails = new ADUserDetails(
                 request.getUsername(),
                 request.getPassword(),
@@ -88,16 +89,32 @@ public class ADAuthService {
      *
      * @param tokenValue value of the token that is being verified.
      * @return Authentication object which holds userDetails.
+     * @throws ClientNotAuthenticatedException, FailedAuthenticationException, FailedAuthorizationException
      */
-    public boolean verifyAuthentication(String tokenValue) throws ClientNotAuthenticatedException {
+    public boolean verifyAuthentication(String tokenValue, String authorization)
+            throws ClientNotAuthenticatedException, FailedAuthenticationException, FailedAuthorizationException {
         if (!StringUtils.isEmpty(tokenValue)) {
             final UserDetails userDetails = authTokenService.getToken(tokenValue).getUser();
-            if (userDetails != null) {
+            if (userDetails != null && verifyAuthorization(userDetails, authorization)) {
+
                 Authentication userAuth = new UserAuthentication(userDetails);
+                SecurityContext context = SecurityContextHolder.createEmptyContext();
+                context.setAuthentication(userAuth);
+                SecurityContextHolder.setContext(context);
+
                 return userAuth.isAuthenticated();
             }
         }
-        return false;
+        throw new FailedAuthenticationException();
+    }
+
+    public boolean verifyAuthorization(UserDetails userDetails, String authorization) throws FailedAuthorizationException {
+        for (GrantedAuthority auth : userDetails.getAuthorities()) {
+            if (authorization.equals(auth.getAuthority())) {
+                return true;
+            }
+        }
+        throw new FailedAuthorizationException();
     }
 
     public void logoutUser(String token) throws InvalidTokenException {
